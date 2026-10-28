@@ -8,6 +8,7 @@ import { SearchModalComponent } from './components/search-modal/search-modal.com
 import { AuthModalComponent } from './components/auth-modal/auth-modal.component';
 import { LoginScreenComponent } from './components/login-screen/login-screen.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { LiveNewsWidgetComponent } from './components/live-news-widget/live-news-widget.component';
 import { AuthService } from './services/auth.service';
 import { UserProfile } from './models/trade.models';
 
@@ -22,7 +23,8 @@ import { UserProfile } from './models/trade.models';
     SearchModalComponent,
     AuthModalComponent,
     LoginScreenComponent,
-    FooterComponent
+    FooterComponent,
+    LiveNewsWidgetComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'

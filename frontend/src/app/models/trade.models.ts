@@ -343,3 +343,17 @@ export interface PredictionComparisonResponse {
   summary_text: string;
 }
 
+export interface NewsImpactAnalysis {
+  asset: string;
+  impact: 'bullish' | 'bearish' | 'neutral' | string;
+  reason: string;
+}
+
+export interface LiveNewsItem {
+  headline: string;
+  analysis: NewsImpactAnalysis;
+  time?: string;
+  link?: string;
+}
+
+

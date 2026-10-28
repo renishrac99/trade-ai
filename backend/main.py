@@ -2,6 +2,7 @@ import os
 import sys
 import warnings
 import logging
+import asyncio
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -13,18 +14,23 @@ logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 try:
-    from backend.routers import auth, stocks, forecast, portfolio, admin, wishlist, pine_script
+    from backend.routers import auth, stocks, forecast, portfolio, admin, wishlist, pine_script, news
+    from backend.services.news_service import news_tracker
     from backend.auth_utils import init_db_and_seed
     from backend.database import db_dialect
 except ImportError:
-    from routers import auth, stocks, forecast, portfolio, admin, wishlist, pine_script
+    from routers import auth, stocks, forecast, portfolio, admin, wishlist, pine_script, news
+    from services.news_service import news_tracker
     from auth_utils import init_db_and_seed
     from database import db_dialect
 
@@ -33,7 +39,11 @@ async def lifespan(app: FastAPI):
     # Initialize database tables and seed default users
     print("[Startup] Initializing TradeAI Database and Seed Profiles...")
     init_db_and_seed()
+    print("[Startup] Starting Live Market News & AI Stock Intelligence Tracker background task...")
+    news_task = asyncio.create_task(news_tracker.start_tracking())
     yield
+    print("[Shutdown] Stopping Live News Tracker...")
+    news_tracker.is_running = False
     print("[Shutdown] TradeAI Application shutting down.")
 
 app = FastAPI(
@@ -68,6 +78,7 @@ app.include_router(forecast.router)
 app.include_router(portfolio.router)
 app.include_router(wishlist.router)
 app.include_router(pine_script.router)
+app.include_router(news.router)
 
 @app.get("/")
 def root():

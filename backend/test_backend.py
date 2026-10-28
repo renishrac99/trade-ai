@@ -411,6 +411,53 @@ def test_pine_script_engine_and_endpoints():
     assert del_res.status_code == 200
     assert del_res.json()["status"] == "deleted"
 
+def test_live_news_debug_and_history_endpoints():
+    """Verify live news debug metrics and HTTP backfill endpoint."""
+    res_debug = client.get("/api/news/debug")
+    assert res_debug.status_code == 200
+    debug_data = res_debug.json()
+    assert "history_len" in debug_data
+    assert "subscribers" in debug_data
+    assert "cache_len" in debug_data
+
+    res_history = client.get("/api/news/history")
+    assert res_history.status_code == 200
+    history_data = res_history.json()
+    assert "count" in history_data
+    assert "news" in history_data
+    assert isinstance(history_data["news"], list)
+    assert len(history_data["news"]) > 0
+    first_item = history_data["news"][0]
+    assert "headline" in first_item
+    assert "analysis" in first_item
+    assert "asset" in first_item["analysis"]
+    assert "impact" in first_item["analysis"]
+    assert first_item["analysis"]["impact"] in ["bullish", "bearish", "neutral"]
+
+def test_live_news_ai_heuristics():
+    """Verify AI extraction with bullish, bearish and neutral scenarios."""
+    from services.news_service import analyze_impact_with_ai
+    
+    bullish_result = analyze_impact_with_ai("TCS bags $1.2B mega deal from European enterprise; shares rise 3%")
+    assert bullish_result is not None
+    assert bullish_result["asset"] in ["TCS", "MARKET"]
+    assert bullish_result["impact"] == "bullish"
+    assert "reason" in bullish_result
+
+    bearish_result = analyze_impact_with_ai("Crude oil drops 4% amid inventory surge and economic slump")
+    assert bearish_result is not None
+    assert bearish_result["impact"] in ["bearish", "neutral"]
+
+def test_live_news_websocket_stream():
+    """Verify WebSocket client handshake and historical backfill transmission."""
+    with client.websocket_connect("/api/news/live") as websocket:
+        data = websocket.receive_json()
+        assert "headline" in data
+        assert "analysis" in data
+        assert "asset" in data["analysis"]
+        assert "impact" in data["analysis"]
+
+
 
 
 

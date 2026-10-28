@@ -116,7 +116,7 @@ import { UserProfile } from '../../models/trade.models';
           <path d="M3 3v18h18" />
           <path d="m19 9-5 5-4-4-3 3" />
         </svg>
-        <span>TataSil</span>
+        <span>Tata Silver ETF</span>
       </a>
 
       <a routerLink="/pine-script" routerLinkActive="active" class="mobile-nav-item">

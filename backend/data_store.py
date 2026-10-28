@@ -55,14 +55,14 @@ class DataStore:
             PortfolioPosition(
                 id="pos_1",
                 symbol="TATASIL",
-                name="Tata Steel Limited",
-                shares=250.0,
-                average_buy_price=152.00,
-                current_price=152.00,
-                invested_amount=38000.0,
-                current_value=38000.0,
-                unrealized_pnl=0.0,
-                unrealized_pnl_pct=0.0,
+                name="Tata Silver ETF",
+                shares=1500.0,
+                average_buy_price=19.80,
+                current_price=21.31,
+                invested_amount=29700.0,
+                current_value=31965.0,
+                unrealized_pnl=2265.0,
+                unrealized_pnl_pct=7.63,
                 buy_date="2026-08-15"
             ),
             PortfolioPosition(

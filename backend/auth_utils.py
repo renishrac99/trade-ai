@@ -193,16 +193,75 @@ def init_db_and_seed():
 
         # Check and seed/sync Market Symbols from API
         try:
-            from backend.db_models import MarketSymbolDB
+            from backend.db_models import MarketSymbolDB, TradeDataDB, PredictionDB
             from backend.live_market_service import LiveMarketService
         except ImportError:
-            from db_models import MarketSymbolDB
+            from db_models import MarketSymbolDB, TradeDataDB, PredictionDB
             from live_market_service import LiveMarketService
             
         sym_count = db.query(MarketSymbolDB).count()
         if sym_count == 0:
             print("[Database Seed] Syncing market symbols from API into database...")
             LiveMarketService.sync_symbols_to_db()
+        else:
+            # Self-healing migration: Ensure TATASIL correctly maps to Tata Silver ETF (TATSILV.NS)
+            tatasil_row = db.query(MarketSymbolDB).filter(MarketSymbolDB.symbol == "TATASIL").first()
+            if tatasil_row and (tatasil_row.ticker != "TATSILV.NS" or "Steel" in tatasil_row.name):
+                print("[Database Migration] Correcting TATASIL to Tata Silver ETF (TATSILV.NS)...")
+                tatasil_row.ticker = "TATSILV.NS"
+                tatasil_row.name = "Tata Silver ETF"
+                tatasil_row.category = "ETF"
+                tatasil_row.updated_at = datetime.utcnow()
+                # Purge stale high-price caches for TATASIL (> 50) from previous Tata Steel mapping
+                try:
+                    db.query(TradeDataDB).filter(TradeDataDB.symbol == "TATASIL").delete()
+                    db.query(PredictionDB).filter(PredictionDB.symbol == "TATASIL").delete()
+                except Exception:
+                    pass
+                db.commit()
+
+            # Ensure TATASTEEL exists as its own symbol
+            tatasteel_row = db.query(MarketSymbolDB).filter(MarketSymbolDB.symbol == "TATASTEEL").first()
+            if not tatasteel_row:
+                db.add(MarketSymbolDB(
+                    symbol="TATASTEEL",
+                    ticker="TATASTEEL.NS",
+                    name="Tata Steel Limited",
+                    category="EQUITY",
+                    exchange="NSE",
+                    currency="₹",
+                    description="Tata Steel Limited engages in steel manufacturing.",
+                    is_active=True,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow()
+                ))
+                db.commit()
+
+            # Ensure TATSILV alias exists
+            tatsilv_row = db.query(MarketSymbolDB).filter(MarketSymbolDB.symbol == "TATSILV").first()
+            if not tatsilv_row:
+                db.add(MarketSymbolDB(
+                    symbol="TATSILV",
+                    ticker="TATSILV.NS",
+                    name="Tata Silver ETF",
+                    category="ETF",
+                    exchange="NSE",
+                    currency="₹",
+                    description="Tata Silver Exchange Traded Fund.",
+                    is_active=True,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow()
+                ))
+                db.commit()
+
+        # Update any existing wishlist item for TATASIL
+        wl_tatasil = db.query(WishlistDB).filter(WishlistDB.symbol == "TATASIL").first()
+        if wl_tatasil and "Steel" in wl_tatasil.name:
+            wl_tatasil.name = "Tata Silver ETF"
+            wl_tatasil.category = "ETF"
+            wl_tatasil.target_buy_price = 20.5
+            wl_tatasil.notes = "Core silver commodity holding. Track domestic physical silver price."
+            db.commit()
 
         # Check and seed default wishlist items for demo user
         wl_count = db.query(WishlistDB).count()
@@ -212,10 +271,10 @@ def init_db_and_seed():
                     id="wl_usr_demo_01_tatasil",
                     user_id="usr_demo_01",
                     symbol="TATASIL",
-                    name="Tata Steel Limited",
-                    category="EQUITY",
-                    target_buy_price=145.0,
-                    notes="Core commodity holding. Watch for rally above 155.",
+                    name="Tata Silver ETF",
+                    category="ETF",
+                    target_buy_price=20.5,
+                    notes="Core silver commodity holding. Track domestic physical silver price.",
                     added_at=datetime.utcnow()
                 ),
                 WishlistDB(

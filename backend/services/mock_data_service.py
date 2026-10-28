@@ -17,7 +17,9 @@ class MockDataService:
     """
 
     MOCK_STOCKS = [
-        {"symbol": "TATASIL", "name": "Tata Steel Limited", "price": 158.40, "exchange": "NSE", "category": "EQUITY", "currency": "₹"},
+        {"symbol": "TATASIL", "name": "Tata Silver ETF", "price": 21.31, "exchange": "NSE", "category": "ETF", "currency": "₹"},
+        {"symbol": "TATSILV", "name": "Tata Silver ETF", "price": 21.31, "exchange": "NSE", "category": "ETF", "currency": "₹"},
+        {"symbol": "TATASTEEL", "name": "Tata Steel Limited", "price": 164.50, "exchange": "NSE", "category": "EQUITY", "currency": "₹"},
         {"symbol": "RELIANCE", "name": "Reliance Industries Ltd", "price": 2980.50, "exchange": "NSE", "category": "EQUITY", "currency": "₹"},
         {"symbol": "HDFCBANK", "name": "HDFC Bank Limited", "price": 1640.25, "exchange": "NSE", "category": "EQUITY", "currency": "₹"},
         {"symbol": "ICICIBANK", "name": "ICICI Bank Ltd", "price": 1210.80, "exchange": "NSE", "category": "EQUITY", "currency": "₹"},

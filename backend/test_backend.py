@@ -48,7 +48,19 @@ def test_public_stock_endpoints():
 
     res_detail = client.get("/api/stocks/TATASIL")
     assert res_detail.status_code == 200
-    assert res_detail.json()["symbol"] == "TATASIL"
+    detail = res_detail.json()
+    assert detail["symbol"] == "TATASIL"
+    assert detail["category"] == "ETF"
+    assert "Silver" in detail["name"]
+    assert detail["current_price"] < 50.0  # Tata Silver ETF ~ 21.31, NOT Tata Steel 164+
+
+    res_steel = client.get("/api/stocks/TATASTEEL")
+    assert res_steel.status_code == 200
+    steel_detail = res_steel.json()
+    assert steel_detail["symbol"] == "TATASTEEL"
+    assert steel_detail["category"] == "EQUITY"
+    assert "Steel" in steel_detail["name"]
+    assert steel_detail["current_price"] > 100.0  # Tata Steel ~ 164-175
 
 def test_user_login_and_protected_access():
     # Login as trader

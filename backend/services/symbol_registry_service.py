@@ -11,7 +11,10 @@ class SymbolRegistryService:
     """
 
     ALIASES = {
-        "TATASIL": "TATASTEEL.NS",
+        "TATASIL": "TATSILV.NS",
+        "TATSILV": "TATSILV.NS",
+        "TATASILVER": "TATSILV.NS",
+        "TATASTEEL": "TATASTEEL.NS",
         "NIFTY50": "^NSEI",
         "NIFTY": "^NSEI",
         "BANKNIFTY": "^NSEBANK",
@@ -20,7 +23,9 @@ class SymbolRegistryService:
 
     # Core base seeds when database is initially initialized
     DEFAULT_SEED_SYMBOLS: List[Dict[str, str]] = [
-        {"symbol": "TATASIL", "ticker": "TATASTEEL.NS", "name": "Tata Steel Limited", "category": "EQUITY", "exchange": "NSE", "currency": "₹"},
+        {"symbol": "TATASIL", "ticker": "TATSILV.NS", "name": "Tata Silver ETF", "category": "ETF", "exchange": "NSE", "currency": "₹"},
+        {"symbol": "TATSILV", "ticker": "TATSILV.NS", "name": "Tata Silver ETF", "category": "ETF", "exchange": "NSE", "currency": "₹"},
+        {"symbol": "TATASTEEL", "ticker": "TATASTEEL.NS", "name": "Tata Steel Limited", "category": "EQUITY", "exchange": "NSE", "currency": "₹"},
         {"symbol": "RELIANCE", "ticker": "RELIANCE.NS", "name": "Reliance Industries Ltd", "category": "EQUITY", "exchange": "NSE", "currency": "₹"},
         {"symbol": "HDFCBANK", "ticker": "HDFCBANK.NS", "name": "HDFC Bank Limited", "category": "EQUITY", "exchange": "NSE", "currency": "₹"},
         {"symbol": "ICICIBANK", "ticker": "ICICIBANK.NS", "name": "ICICI Bank Ltd", "category": "EQUITY", "exchange": "NSE", "currency": "₹"},
@@ -84,7 +89,7 @@ class SymbolRegistryService:
             "symbol": symbol_upper,
             "ticker": yf_ticker,
             "name": name or symbol_upper,
-            "category": category or ("ETF" if "BEES" in symbol_upper else ("INDEX" if "^" in yf_ticker or "NIFTY" in symbol_upper else "EQUITY")),
+            "category": category or ("ETF" if ("BEES" in symbol_upper or "SILV" in symbol_upper or "SILVER" in symbol_upper or "ETF" in symbol_upper or yf_ticker == "TATSILV.NS") else ("INDEX" if "^" in yf_ticker or "NIFTY" in symbol_upper else "EQUITY")),
             "exchange": exchange or ("BSE" if yf_ticker.endswith(".BO") or "^BSESN" in yf_ticker else ("NASDAQ" if "." not in yf_ticker and "^" not in yf_ticker else "NSE")),
             "currency": currency or ("$" if exchange in ["NASDAQ", "NYSE"] or (not yf_ticker.endswith(".NS") and not yf_ticker.endswith(".BO") and not yf_ticker.startswith("^NSE") and not yf_ticker.startswith("^BSE")) else "₹"),
             "description": f"Real-time asset {symbol_upper} traded on {exchange or 'NSE'}."
@@ -98,7 +103,9 @@ class SymbolRegistryService:
             if info:
                 meta["name"] = info.get("longName") or info.get("shortName") or meta["name"]
                 q_type = str(info.get("quoteType", "")).upper()
-                if "ETF" in q_type:
+                if yf_ticker == "TATSILV.NS" or "SILV" in symbol_upper or "BEES" in symbol_upper or "ETF" in meta["name"].upper():
+                    meta["category"] = "ETF"
+                elif "ETF" in q_type:
                     meta["category"] = "ETF"
                 elif "INDEX" in q_type:
                     meta["category"] = "INDEX"
@@ -242,6 +249,14 @@ class SymbolRegistryService:
                             updated_at=datetime.utcnow()
                         )
                         db.add(new_item)
+                        saved_symbols.append(seed["symbol"])
+                    else:
+                        existing.ticker = seed["ticker"]
+                        existing.name = seed["name"]
+                        existing.category = seed["category"]
+                        existing.exchange = seed["exchange"]
+                        existing.currency = seed["currency"]
+                        existing.updated_at = datetime.utcnow()
                         saved_symbols.append(seed["symbol"])
             else:
                 for sym in symbols:

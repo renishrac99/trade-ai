@@ -22,7 +22,9 @@ class MarketDataAgent(BaseAgent):
     def _resolve_yfinance_ticker(self, symbol: str) -> str:
         s = symbol.upper().strip()
         mapping = {
-            "TATASIL": "TATASTEEL.NS",
+            "TATASIL": "TATSILV.NS",
+            "TATSILV": "TATSILV.NS",
+            "TATASILVER": "TATSILV.NS",
             "TATASTEEL": "TATASTEEL.NS",
             "RELIANCE": "RELIANCE.NS",
             "NIFTY50": "^NSEI",
